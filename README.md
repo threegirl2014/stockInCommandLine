@@ -1,1 +1,3 @@
 # stockInCommandLine
+
+在命令行使用python实时查看股市信息
