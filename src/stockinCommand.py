@@ -14,35 +14,38 @@ from terminalColor import bcolors
 
 # from matplotlib.finance import stock_dt
 
-mystock = [
-           ['000963',500,23.854],
-           ['002001',300,34.581]
-           ]
+mystock = {}
 
-url = "http://hq.sinajs.cn/list=\
-sh000001,\
-sz399001,\
-sz399006,\
-sz000818,\
-sz000949,\
-sh600619,\
-sz000877,\
-sz002200,\
-sh600830,\
-sh601318,\
-sz150019"
+stocks = ''
+
+url = "http://hq.sinajs.cn/list="
+
+
+def readData():
+    f = file('myStockInfo.txt', 'r')
+    stockList = f.read().split('\n')
+    global stocks, mystock, mystockCode
+    for item in stockList:
+        itemList = item.split()
+        stocks += itemList[0] + ','
+        if len(itemList) == 3:
+            mystock[itemList[0]] = ( itemList[1], itemList[2] )
+    stocks = stocks[:-1]
+    f.close()
+    
+
 
 def getTime():
     return time.strftime('%Y-%m-%d %A %p %X', time.localtime(time.time()))
 
 
-def name_in_mystock(name):
-    i = 0
-    for s in mystock:
-        i += 1
-        if name.find(s[0]) is not -1:
-            return i
-    return 0
+# def name_in_mystock(name):
+#     i = 0
+#     for s in mystock:
+#         i += 1
+#         if name.find(s[0]) is not -1:
+#             return i
+#     return 0
 
 def highOrLow(a,b):
     if a >= b:
@@ -50,12 +53,13 @@ def highOrLow(a,b):
     else:
         return bcolors.GREEN
     
-data = urllib.urlopen(url).read().decode('gb2312')
-#print type(data)
-line = data.split('\n')
 
 def printStock():
-    print bcolors.WHITE, "代码      名称         昨收        今开     最高        最低       现价     涨幅", bcolors.ENDC
+    data = urllib.urlopen(url + stocks).read().decode('gb2312')
+    #print type(data)
+    line = data.split('\n')
+    
+    print bcolors.WHITE, "代码      名称         昨收        今开     最高        最低       现价     涨幅      浮动数额       盈亏比例     成本金额", bcolors.ENDC
 
     for stock in line:
         stockInfo = stock.split(',')
@@ -70,7 +74,7 @@ def printStock():
             todayMaxPrice = string.atof(stockInfo[4])
             todayMinPrice = string.atof(stockInfo[5])
             if '%.2f' % todayBeginPrice == '0.00':
-                per = u'停牌'
+                per = u'停牌  '
             else:
                 per = ( '%+.2f' % ( ( currentPrice / yersterdayEndPrice - 1 ) * 100 ) )+ '%'
             #红涨绿跌
@@ -78,18 +82,44 @@ def printStock():
             currentPriceColor = highOrLow(currentPrice, yersterdayEndPrice)
             todayMaxPriceColor = highOrLow(todayMaxPrice, yersterdayEndPrice)
             todayMinPriceColor = highOrLow(todayMinPrice, yersterdayEndPrice)
-
-            print '%s%s%s %s%4s%s %s%10.2f%s %s%10.2f%s %s%10.2f%s %s%10.2f%s %s%10.2f   %s%s' % \
-                (bcolors.WHITE, code, bcolors.ENDC,  
-                 bcolors.WHITE, name, bcolors.ENDC,  
-                 bcolors.WHITE, yersterdayEndPrice, bcolors.ENDC,  
-                 todayBeginPriceColor, todayBeginPrice, bcolors.ENDC, 
-                 todayMaxPriceColor, todayMaxPrice, bcolors.ENDC, 
-                 todayBeginPriceColor, todayMinPrice, bcolors.ENDC, 
-                 currentPriceColor, currentPrice, per, bcolors.ENDC)
             
+            stockCost = 0
+            stockQuantity = 0
+            floatMoney = 0
+            stockRatio = 0
+            floatMoneyColor = bcolors.WHITE
+            if code in mystock:
+                stockQuantity = int(mystock[code][0])
+                stockCost = string.atof(mystock[code][1])
+                if '%.2f' % todayBeginPrice != '0.00':
+                    floatMoney = ( currentPrice - stockCost ) * stockQuantity
+                    stockRatio = ( '%+.2f' % ( (currentPrice / stockCost - 1) * 100 ) ) + '%'
+                
+                floatMoneyColor = highOrLow(currentPrice, stockCost)
+                    
             
+                print '%s%s%s %s%4s%s %s%10.2f%s %s%10.2f%s %s%10.2f%s %s%10.2f%s %s%10.2f   %s%s    %s%10.2f     %10s%s   %s%10.2f%s' % \
+                    (bcolors.WHITE, code, bcolors.ENDC,  
+                     bcolors.WHITE, name, bcolors.ENDC,  
+                     bcolors.WHITE, yersterdayEndPrice, bcolors.ENDC,  
+                     todayBeginPriceColor, todayBeginPrice, bcolors.ENDC, 
+                     todayMaxPriceColor, todayMaxPrice, bcolors.ENDC, 
+                     todayBeginPriceColor, todayMinPrice, bcolors.ENDC, 
+                     currentPriceColor, currentPrice, per, bcolors.ENDC,
+                     floatMoneyColor, floatMoney, stockRatio, bcolors.ENDC,
+                     bcolors.WHITE, stockCost * stockQuantity, bcolors.ENDC)
+            else:
+                print '%s%s%s %s%4s%s %s%10.2f%s %s%10.2f%s %s%10.2f%s %s%10.2f%s %s%10.2f   %s%s' % \
+                    (bcolors.WHITE, code, bcolors.ENDC,  
+                     bcolors.WHITE, name, bcolors.ENDC,  
+                     bcolors.WHITE, yersterdayEndPrice, bcolors.ENDC,  
+                     todayBeginPriceColor, todayBeginPrice, bcolors.ENDC, 
+                     todayMaxPriceColor, todayMaxPrice, bcolors.ENDC, 
+                     todayBeginPriceColor, todayMinPrice, bcolors.ENDC, 
+                     currentPriceColor, currentPrice, per, bcolors.ENDC)
+                            
 if __name__ == '__main__':
+    readData()
     while True:
         sysstr = platform.system()
         if sysstr == 'Darwin':

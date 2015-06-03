@@ -61,9 +61,17 @@ xxx:
 
 mac osx下的文本操作键：http://my.oschina.net/kelvinline/blog/322671
 
+python 字符encode 和 decode：http://blog.csdn.net/moodytong/article/details/8136258
+
+print-in-terminal-with-colors-using-python：http://stackoverflow.com/questions/287871/print-in-terminal-with-colors-using-python
+
+ANSI escape code介绍:http://en.wikipedia.org/wiki/ANSI_escape_code
+
 python 中获取当前时间：http://www.jb51.net/article/45657.htm
 
 python 获取股票信息：http://blog.chinaunix.net/uid-20196333-id-1972442.html
+
+新浪股票接口介绍：http://www.360doc.com/content/09/0823/00/70382_5161883.shtml
 
 python 定时刷新：http://blog.csdn.net/lxlzhn/article/details/8940125
 
