@@ -89,11 +89,11 @@ def printStock():
                 if '%.2f' % todayBeginPrice != '0.00':
                     floatMoney = ( currentPrice - stockCost ) * stockQuantity
                     stockRatio = ( '%+.2f' % ( (currentPrice / stockCost - 1) * 100 ) ) + '%'
+                    floatMoneyColor = highOrLow(currentPrice, stockCost)
                 else:
                     floatMoney = ( yersterdayEndPrice - stockCost ) * stockQuantity
                     stockRatio = ( '%+.2f' % ( (yersterdayEndPrice / stockCost - 1) * 100 ) ) + '%'
-                floatMoneyColor = highOrLow(currentPrice, stockCost)
-                    
+                    floatMoneyColor = highOrLow(yersterdayEndPrice, stockCost)
             
                 print '%s%s%s %s%4s%s %s%10.2f%s %s%10.2f%s %s%10.2f%s %s%10.2f%s %s%10.2f   %s%s    %s%10.2f     %10s%s   %s%10.2f%s' % \
                     (bcolors.WHITE, code, bcolors.ENDC,  
