@@ -9,6 +9,7 @@ import urllib
 import string
 import time
 import os
+import sys
 import platform
 from terminalColor import bcolors
 
@@ -22,37 +23,34 @@ url = "http://hq.sinajs.cn/list="
 
 
 def readData():
-    f = file('myStockInfo.txt', 'r')
+    f = open('myStockInfo.txt', 'r')
     stockList = f.read().split('\n')
     global stocks, mystock, mystockCode
     for item in stockList:
-        itemList = item.split()
-        stocks += itemList[0] + ','
-        if len(itemList) == 3:
-            mystock[itemList[0]] = ( itemList[1], itemList[2] )
+        if item != '':
+            itemList = item.split()
+            stocks += itemList[0] + ','
+            mystock[itemList[0]] = ( itemList[1], itemList[2] ) if len(itemList) == 3 else None
     stocks = stocks[:-1]
     f.close()
+
+def writeData():
+    f = open('myStockInfo.txt', 'w')
+    print "MY STOCKS INFO:"
+    for item in mystock:
+        if mystock[item] == None:
+            f.write(item + '\n')
+            print item
+        else:
+            f.write(item + ' ' + str(mystock[item][0]) + ' ' + str(mystock[item][1]) + '\n')
+            print item + ' ' + str(mystock[item][0]) + ' ' + str(mystock[item][1])
+    f.close()
     
-
-
 def getTime():
     return time.strftime('%Y-%m-%d %A %p %X', time.localtime(time.time()))
 
-
-# def name_in_mystock(name):
-#     i = 0
-#     for s in mystock:
-#         i += 1
-#         if name.find(s[0]) is not -1:
-#             return i
-#     return 0
-
 def highOrLow(a,b):
-    if a >= b:
-        return bcolors.RED
-    else:
-        return bcolors.GREEN
-    
+    return bcolors.RED if a >= b else bcolors.GREEN  
 
 def printStock():
     data = urllib.urlopen(url + stocks).read().decode('gb2312')
@@ -73,10 +71,7 @@ def printStock():
             currentPrice   = string.atof(stockInfo[3])
             todayMaxPrice = string.atof(stockInfo[4])
             todayMinPrice = string.atof(stockInfo[5])
-            if '%.2f' % todayBeginPrice == '0.00':
-                per = u'停牌  '
-            else:
-                per = ( '%+.2f' % ( ( currentPrice / yersterdayEndPrice - 1 ) * 100 ) )+ '%'
+            per = u'停牌  ' if '%.2f' % todayBeginPrice == '0.00' else  ('%+.2f' % ( ( currentPrice / yersterdayEndPrice - 1 ) * 100 ) )+ '%'
             #红涨绿跌
             todayBeginPriceColor = highOrLow(todayBeginPrice, yersterdayEndPrice)
             currentPriceColor = highOrLow(currentPrice, yersterdayEndPrice)
@@ -88,13 +83,15 @@ def printStock():
             floatMoney = 0
             stockRatio = 0
             floatMoneyColor = bcolors.WHITE
-            if code in mystock:
+            if (code in mystock) and (mystock[code] != None):
                 stockQuantity = int(mystock[code][0])
                 stockCost = string.atof(mystock[code][1])
                 if '%.2f' % todayBeginPrice != '0.00':
                     floatMoney = ( currentPrice - stockCost ) * stockQuantity
                     stockRatio = ( '%+.2f' % ( (currentPrice / stockCost - 1) * 100 ) ) + '%'
-                
+                else:
+                    floatMoney = ( yersterdayEndPrice - stockCost ) * stockQuantity
+                    stockRatio = ( '%+.2f' % ( (yersterdayEndPrice / stockCost - 1) * 100 ) ) + '%'
                 floatMoneyColor = highOrLow(currentPrice, stockCost)
                     
             
@@ -120,14 +117,28 @@ def printStock():
                             
 if __name__ == '__main__':
     readData()
-    while True:
-        sysstr = platform.system()
-        if sysstr == 'Darwin':
-            i = os.system('clear')
-        elif sysstr == 'Windows':
-            i = os.system('cls')
-        elif sysstr == 'Linux':
-            i = os.system('clear')
-        print bcolors.YELLOW, getTime(), bcolors.ENDC
-        printStock()
-        time.sleep(5)            
+    if len(sys.argv) != 1:
+        newStockCode = sys.argv[2]
+        newStockQuantity = ''
+        newStockPrice = ''
+        if len(sys.argv) == 5:
+            newStockQuantity = int(sys.argv[3])
+            newStockPrice = float(sys.argv[4])
+        if sys.argv[1] == 'add':
+            mystock[newStockCode] = (newStockQuantity, newStockPrice) if newStockQuantity != '' else None
+        elif sys.argv[1] == 'delete':
+            if mystock.has_key(newStockCode):
+                del mystock[newStockCode]
+        writeData()
+    else:
+        while True:
+            sysstr = platform.system()
+            if sysstr == 'Darwin':
+                i = os.system('clear')
+            elif sysstr == 'Windows':
+                i = os.system('cls')
+            elif sysstr == 'Linux':
+                i = os.system('clear')
+            print bcolors.YELLOW, getTime(), bcolors.ENDC
+            printStock()
+            time.sleep(5)            
